@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import altair as alt
 import os
 
 from src.live_monitor import analyze_live_traffic
@@ -10,232 +8,56 @@ from src.live_agent import calculate_live_risk
 
 
 # ============================================================
-# PAGE CONFIGURATION & METADATA
+# PAGE CONFIGURATION
 # ============================================================
 
 st.set_page_config(
-    page_title="SentinelAI - Intrusion Detection Engine",
+    page_title="Intrusion Detection Engine",
     page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
+
 # ============================================================
-# MODERN CYBERSECURITY UI STYLING
+# HEADER
 # ============================================================
 
-st.markdown("""
-<style>
-    /* Global Typography & Background Accents */
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+st.title("🛡️ Intrusion Detection Engine")
+st.caption("AI-Powered Live Network Monitoring, Anomaly Detection & Risk Analysis Agent")
 
-    html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
+st.write(
+    "SentinelAI analyzes network traffic dynamics in real time using an **Isolation Forest AI Anomaly Detector** "
+    "combined with an **Explainable Security Agent** to differentiate benign everyday activity from malicious intrusions."
+)
 
-    code, pre, [data-testid="stMetricValue"] {
-        font-family: 'JetBrains Mono', monospace !important;
-    }
-
-    /* Main Container Padding */
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 3rem;
-    }
-
-    /* Cybersecurity Header Card */
-    .cyber-header {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.90) 50%, rgba(15, 23, 42, 0.95) 100%);
-        border: 1px solid rgba(56, 189, 248, 0.25);
-        border-radius: 16px;
-        padding: 24px 30px;
-        margin-bottom: 24px;
-        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-
-    .cyber-title {
-        font-size: 2.2rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #34d399 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 6px;
-        letter-spacing: -0.5px;
-    }
-
-    .cyber-subtitle {
-        color: #94a3b8;
-        font-size: 1.05rem;
-        font-weight: 400;
-        margin-bottom: 14px;
-    }
-
-    /* Status Pill Badges */
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 12px;
-        border-radius: 9999px;
-        font-size: 0.82rem;
-        font-weight: 600;
-        margin-right: 8px;
-        border: 1px solid transparent;
-    }
-
-    .badge-green {
-        background: rgba(16, 185, 129, 0.15);
-        color: #34d399;
-        border-color: rgba(52, 211, 153, 0.3);
-    }
-
-    .badge-blue {
-        background: rgba(56, 189, 248, 0.15);
-        color: #38bdf8;
-        border-color: rgba(56, 189, 248, 0.3);
-    }
-
-    .badge-purple {
-        background: rgba(168, 85, 247, 0.15);
-        color: #c084fc;
-        border-color: rgba(192, 132, 252, 0.3);
-    }
-
-    /* Cyber Metric Cards */
-    [data-testid="stMetric"] {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(148, 163, 184, 0.15);
-        border-radius: 12px;
-        padding: 16px 18px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-
-    [data-testid="stMetric"]:hover {
-        border-color: rgba(56, 189, 248, 0.4);
-        transform: translateY(-2px);
-    }
-
-    [data-testid="stMetricLabel"] {
-        font-size: 0.85rem !important;
-        color: #94a3b8 !important;
-        font-weight: 600 !important;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    [data-testid="stMetricValue"] {
-        font-size: 1.8rem !important;
-        font-weight: 700 !important;
-    }
-
-    /* Security Alert Boxes */
-    .alert-card {
-        border-radius: 12px;
-        padding: 18px 24px;
-        margin: 16px 0;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-
-    .alert-low {
-        background: linear-gradient(90deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
-        border-left: 5px solid #10b981;
-        border-top: 1px solid rgba(16, 185, 129, 0.2);
-        border-right: 1px solid rgba(16, 185, 129, 0.2);
-        border-bottom: 1px solid rgba(16, 185, 129, 0.2);
-        color: #e2e8f0;
-    }
-
-    .alert-medium {
-        background: linear-gradient(90deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
-        border-left: 5px solid #f59e0b;
-        border-top: 1px solid rgba(245, 158, 11, 0.2);
-        border-right: 1px solid rgba(245, 158, 11, 0.2);
-        border-bottom: 1px solid rgba(245, 158, 11, 0.2);
-        color: #e2e8f0;
-    }
-
-    .alert-high {
-        background: linear-gradient(90deg, rgba(249, 115, 22, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
-        border-left: 5px solid #f97316;
-        border-top: 1px solid rgba(249, 115, 22, 0.2);
-        border-right: 1px solid rgba(249, 115, 22, 0.2);
-        border-bottom: 1px solid rgba(249, 115, 22, 0.2);
-        color: #e2e8f0;
-    }
-
-    .alert-critical {
-        background: linear-gradient(90deg, rgba(239, 68, 68, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%);
-        border-left: 5px solid #ef4444;
-        border-top: 1px solid rgba(239, 68, 68, 0.2);
-        border-right: 1px solid rgba(239, 68, 68, 0.2);
-        border-bottom: 1px solid rgba(239, 68, 68, 0.2);
-        color: #fee2e2;
-    }
-
-    /* Reasoning List Items */
-    .reason-box {
-        background: rgba(30, 41, 59, 0.4);
-        border: 1px solid rgba(148, 163, 184, 0.15);
-        border-radius: 8px;
-        padding: 10px 16px;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-size: 0.95rem;
-    }
-
-    /* Buttons */
-    .stButton>button {
-        border-radius: 10px;
-        font-weight: 600;
-        padding: 10px 20px;
-        transition: all 0.2s ease;
-    }
-</style>
-""", unsafe_allow_html=True)
+st.divider()
 
 
 # ============================================================
-# SYSTEM STATUS CHECK
+# SYSTEM STATUS
 # ============================================================
 
 model_path = "models/live_isolation_forest.joblib"
 scaler_path = "models/live_scaler.joblib"
-models_ready = os.path.exists(model_path) and os.path.exists(scaler_path)
+
+if os.path.exists(model_path) and os.path.exists(scaler_path):
+    st.success("🟢 Live AI Model: Calibrated & Ready")
+else:
+    st.error(
+        "🔴 Live AI Model: Not Found\n\n"
+        "Please train the live model first using `python src/train_live_model.py`."
+    )
+
+st.divider()
 
 
 # ============================================================
-# HEADER SECTION
-# ============================================================
-
-st.markdown("""
-<div class="cyber-header">
-    <div class="cyber-title">🛡️ SentinelAI Threat Intelligence Engine</div>
-    <div class="cyber-subtitle">Real-Time Network Intrusion Detection, Isolation Forest AI Anomaly Scoring & Explainable Security Agent</div>
-    <div>
-        <span class="status-badge badge-green">🟢 AI Engine Calibrated</span>
-        <span class="status-badge badge-blue">📡 Network Sensor Active</span>
-        <span class="status-badge badge-purple">⚡ Streamlit Cloud Ready</span>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-if not models_ready:
-    st.error("⚠️ AI Model artifacts not found. Please run `python src/train_live_model.py` to initialize models.")
-
-
-# ============================================================
-# PRE-CONFIGURED SCENARIOS REPOSITORY
+# TRAFFIC SCENARIOS PRESETS
 # ============================================================
 
 PRESET_SCENARIOS = {
     "🟢 Normal Web Browsing (HTTPS)": {
-        "tag": "BENIGN",
-        "description": "Standard interactive user browsing: visiting websites, reading documentation, CDN assets. Balanced client-server flow with moderate packet rates.",
+        "description": "Typical client browsing websites, news, or articles. Modest packet rates, balanced bidirectional traffic, small request payloads, and standard response payloads.",
         "features": {
             "duration": 5, "total_packets": 240, "total_bytes": 210000,
             "packets_per_second": 48.0, "bytes_per_second": 42000.0,
@@ -245,19 +67,17 @@ PRESET_SCENARIOS = {
         }
     },
     "🟢 Idle System & Background Telemetry": {
-        "tag": "BENIGN",
-        "description": "Desktop in idle state: periodic DNS lookups, NTP clock synchronizations, lightweight OS telemetry, and application keep-alive beacons.",
+        "description": "PC in an idle state. Background OS queries, NTP time-sync, lightweight cloud sync, and periodic keep-alive beacons.",
         "features": {
             "duration": 5, "total_packets": 22, "total_bytes": 12000,
-            "packets_per_second": 4.4, "bytes_per_second": 2400.0,
+            "packets_per_second": 4.8, "bytes_per_second": 2400.0,
             "tcp_packets": 15, "udp_packets": 7, "incoming_packets": 14, "outgoing_packets": 8,
-            "forward_packets": 8, "backward_packets": 14, "forward_bytes": 2500, "backward_bytes": 9500,
+            "forward_packets": 8, "backward_packets": 15, "forward_bytes": 2500, "backward_bytes": 9500,
             "unique_sources": 1, "unique_destinations": 5
         }
     },
-    "🟢 High-Definition Media Streaming": {
-        "tag": "BENIGN",
-        "description": "High-bandwidth entertainment stream (YouTube/Netflix): sustained inbound packet delivery, high byte throughput, low outbound request ratio.",
+    "🟢 Media & Video Streaming (YouTube/Netflix)": {
+        "description": "High-throughput benign entertainment stream. High incoming payload volume, stable packet rates, and low outbound request volume.",
         "features": {
             "duration": 5, "total_packets": 920, "total_bytes": 4500000,
             "packets_per_second": 184.0, "bytes_per_second": 900000.0,
@@ -267,8 +87,7 @@ PRESET_SCENARIOS = {
         }
     },
     "🔴 SYN Flood Attack (Denial of Service)": {
-        "tag": "ATTACK - DoS",
-        "description": "Volumetric TCP SYN flood: rapid generation of thousands of unacknowledged SYN packets. 100% outbound traffic with zero inbound responses.",
+        "description": "Malicious volumetric DoS: Extremely high packet rate with 100% outbound TCP SYN packets and zero server responses.",
         "features": {
             "duration": 5, "total_packets": 9800, "total_bytes": 588000,
             "packets_per_second": 1960.0, "bytes_per_second": 117600.0,
@@ -278,8 +97,7 @@ PRESET_SCENARIOS = {
         }
     },
     "🟠 Port Scan / Network Reconnaissance": {
-        "tag": "ATTACK - RECON",
-        "description": "Horizontal host and port sweep: probing hundreds of remote endpoints in seconds to discover exposed services and vulnerable ports.",
+        "description": "Malicious sweep: Rapid probing across hundreds of distinct destination IP addresses or ports within seconds.",
         "features": {
             "duration": 5, "total_packets": 1650, "total_bytes": 99000,
             "packets_per_second": 330.0, "bytes_per_second": 19800.0,
@@ -289,8 +107,7 @@ PRESET_SCENARIOS = {
         }
     },
     "🟠 Data Exfiltration (Outbound Spill)": {
-        "tag": "ATTACK - EXFIL",
-        "description": "Sensitive data theft / C2 exfiltration: massive outbound upload volume with disproportionately low inbound traffic.",
+        "description": "Malicious data breach: Disproportionate outbound byte transfer with minimal inbound responses.",
         "features": {
             "duration": 5, "total_packets": 2200, "total_bytes": 16500000,
             "packets_per_second": 440.0, "bytes_per_second": 3300000.0,
@@ -303,72 +120,78 @@ PRESET_SCENARIOS = {
 
 
 # ============================================================
-# INPUT MODE TABS
+# INPUT MODE SELECTION
 # ============================================================
 
-st.markdown("### 🎛️ Traffic Assessment Console")
+st.subheader("⚙️ Traffic Input Source & Settings")
 
-tab_live, tab_presets, tab_custom = st.tabs([
-    "📡 Live Network Sniffer",
-    "🧪 Traffic Profiles & Attack Scenarios (Dropdown)",
-    "⚙️ Custom Parameter Simulator"
-])
+input_mode = st.radio(
+    "Choose how you want to evaluate traffic:",
+    [
+        "📡 Live Network Capture",
+        "🧪 Pre-configured Traffic Profiles (Dropdown)",
+        "⚙️ Custom Traffic Parameters"
+    ],
+    horizontal=True
+)
 
 features_to_analyze = None
+trigger_analysis = False
 source_label = ""
 
-with tab_live:
-    st.write("Capture real network packets directly from your active interface and run live anomaly inference:")
-    col_l1, col_l2 = st.columns([3, 1])
-    with col_l1:
-        duration = st.slider("Live Sniffer Duration (seconds)", min_value=3, max_value=15, value=5, step=1, key="live_dur")
-    with col_l2:
+if input_mode == "📡 Live Network Capture":
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        duration = st.slider(
+            "Capture Duration (seconds)",
+            min_value=3,
+            max_value=15,
+            value=5,
+            step=1
+        )
+    with col2:
         st.write("")
         st.write("")
-        btn_live = st.button("🚀 Capture & Analyze Live Traffic", use_container_width=True, type="primary")
+        trigger_analysis = st.button("🚀 Analyze Live Traffic", use_container_width=True)
 
-    if btn_live:
-        with st.spinner(f"🔍 Monitoring network interface for {duration} seconds... Browse web or test applications."):
+    if trigger_analysis:
+        st.info(f"📡 Capturing network traffic for {duration} seconds... Browse the web or continue normal activity.")
+        with st.spinner("🔍 Sniffing network packets and computing flow features..."):
             try:
                 features_to_analyze = analyze_live_traffic(duration)
                 source_label = f"Live Interface Capture ({duration}s)"
             except Exception as e:
-                st.error(f"❌ Network capture failed: {e}")
+                st.error(f"❌ Live capture failed: {e}")
 
-with tab_presets:
-    st.write("Select a pre-configured traffic profile from the dropdown to test model predictions and agent explainability:")
+elif input_mode == "🧪 Pre-configured Traffic Profiles (Dropdown)":
     selected_scenario = st.selectbox(
-        "Choose Network Profile / Scenario:",
-        list(PRESET_SCENARIOS.keys()),
-        key="preset_sel"
+        "Select a Traffic Profile from Dropdown:",
+        list(PRESET_SCENARIOS.keys())
     )
-    preset_data = PRESET_SCENARIOS[selected_scenario]
     
-    st.info(f"**[{preset_data['tag']}]** {preset_data['description']}")
+    scenario_info = PRESET_SCENARIOS[selected_scenario]
+    st.info(f"ℹ️ **Profile Overview:** {scenario_info['description']}")
     
-    col_p1, col_p2 = st.columns([3, 1])
-    with col_p2:
-        btn_preset = st.button("⚡ Evaluate Selected Scenario", use_container_width=True, type="primary")
-
-    if btn_preset:
-        features_to_analyze = preset_data["features"].copy()
+    trigger_analysis = st.button("⚡ Run Scenario Analysis", use_container_width=True)
+    if trigger_analysis:
+        features_to_analyze = scenario_info["features"].copy()
         source_label = selected_scenario
 
-with tab_custom:
-    st.write("Construct an arbitrary traffic profile by tweaking granular parameters:")
+else:  # Custom Traffic Parameters
+    st.write("Tune custom flow parameters to simulate attack vectors or benign baseline variations:")
     c1, c2, c3 = st.columns(3)
     with c1:
-        cust_dur = st.number_input("Capture Duration (s)", min_value=1, max_value=30, value=5)
+        cust_duration = st.number_input("Duration (seconds)", min_value=1, max_value=30, value=5)
         cust_pkts = st.number_input("Total Packets", min_value=1, max_value=50000, value=250)
     with c2:
-        cust_bytes = st.number_input("Total Bytes (B)", min_value=100, max_value=100_000_000, value=200000)
-        cust_fwd_ratio = st.slider("Outbound Packet Ratio", min_value=0.0, max_value=1.0, value=0.30, step=0.05)
+        cust_bytes = st.number_input("Total Bytes", min_value=100, max_value=100_000_000, value=200000)
+        cust_fwd_ratio = st.slider("Outbound (Forward) Packet Ratio", min_value=0.0, max_value=1.0, value=0.30, step=0.05)
     with c3:
-        cust_dest = st.number_input("Unique Target Hosts", min_value=1, max_value=2000, value=15)
-        cust_tcp_ratio = st.slider("TCP Protocol Ratio", min_value=0.0, max_value=1.0, value=0.90, step=0.05)
+        cust_dest = st.number_input("Unique Destination Hosts", min_value=1, max_value=2000, value=15)
+        cust_tcp_ratio = st.slider("TCP Ratio", min_value=0.0, max_value=1.0, value=0.90, step=0.05)
 
-    btn_custom = st.button("🔬 Analyze Custom Flow", use_container_width=True, type="primary")
-    if btn_custom:
+    trigger_analysis = st.button("🔬 Analyze Custom Traffic", use_container_width=True)
+    if trigger_analysis:
         fwd_p = int(cust_pkts * cust_fwd_ratio)
         bwd_p = max(0, cust_pkts - fwd_p)
         fwd_b = int(cust_bytes * cust_fwd_ratio)
@@ -377,11 +200,11 @@ with tab_custom:
         udp_p = max(0, cust_pkts - tcp_p)
 
         features_to_analyze = {
-            "duration": cust_dur,
+            "duration": cust_duration,
             "total_packets": cust_pkts,
             "total_bytes": cust_bytes,
-            "packets_per_second": cust_pkts / cust_dur if cust_dur > 0 else 0,
-            "bytes_per_second": cust_bytes / cust_dur if cust_dur > 0 else 0,
+            "packets_per_second": cust_pkts / cust_duration if cust_duration > 0 else 0,
+            "bytes_per_second": cust_bytes / cust_duration if cust_duration > 0 else 0,
             "tcp_packets": tcp_p,
             "udp_packets": udp_p,
             "incoming_packets": bwd_p,
@@ -393,11 +216,11 @@ with tab_custom:
             "unique_sources": 1,
             "unique_destinations": cust_dest
         }
-        source_label = "Custom Parameter Simulation"
+        source_label = "Custom Simulated Parameters"
 
 
 # ============================================================
-# PERSISTENCE & INFERENCE
+# PERSISTENCE & EXECUTION
 # ============================================================
 
 if features_to_analyze is not None:
@@ -419,7 +242,7 @@ if features_to_analyze is not None:
 # ============================================================
 
 if "last_features" in st.session_state:
-    feat = st.session_state["last_features"]
+    live_features = st.session_state["last_features"]
     prediction = st.session_state["prediction"]
     anomaly_score = st.session_state["anomaly_score"]
     risk = st.session_state["risk"]
@@ -428,155 +251,157 @@ if "last_features" in st.session_state:
     source = st.session_state.get("source_label", "Analyzed Traffic")
 
     st.divider()
-    st.markdown(f"## 📊 Security Intelligence Dashboard: `{source}`")
+    st.header(f"📊 Analysis Dashboard — {source}")
 
     # ----------------------------------------------------
-    # ROW 1: PRIMARY KPI METRICS
+    # AI DETECTION SUMMARY & ALERT
     # ----------------------------------------------------
-    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-    with kpi1:
-        st.metric("AI Anomaly Classification", prediction, delta="Normal Baseline" if prediction == "NORMAL" else "Anomaly Detected", delta_color="normal" if prediction == "NORMAL" else "inverse")
-    with kpi2:
-        st.metric("Risk Score", f"{risk} / 100", delta=f"{100 - risk}% Trust Score")
-    with kpi3:
-        st.metric("Threat Category", level)
-    with kpi4:
-        st.metric("Model Decision Score", f"{anomaly_score:.4f}", help="Isolation Forest decision score. Positive scores indicate typical benign clustering; negative scores indicate rare outliers.")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("AI Model Classification", prediction)
+    with col2:
+        st.metric("Risk Score", f"{risk} / 100")
+    with col3:
+        st.metric("Threat Level", level)
+
+    st.subheader("🚨 Security Status Assessment")
+    if level == "LOW":
+        st.success(f"🟢 **LOW RISK — {risk}/100** | Traffic pattern matches safe benign baseline.")
+    elif level == "MEDIUM":
+        st.warning(f"🟡 **MEDIUM RISK — {risk}/100** | Mild anomaly or elevated traffic parameters detected.")
+    elif level == "HIGH":
+        st.error(f"🟠 **HIGH RISK — {risk}/100** | Suspicious network signatures and significant anomalies detected.")
+    else:
+        st.error(f"🔴 **CRITICAL RISK — {risk}/100** | Severe intrusion or volumetric attack patterns identified.")
 
     # ----------------------------------------------------
-    # ROW 2: SECURITY STATUS BANNER
+    # SECURITY AGENT REASONING
     # ----------------------------------------------------
-    alert_class = f"alert-{level.lower()}"
-    alert_icon = "🟢" if level == "LOW" else ("🟡" if level == "MEDIUM" else ("🟠" if level == "HIGH" else "🔴"))
-    alert_text = (
-        f"**{level} RISK ({risk}/100)** — Flow telemetry closely matches standard benign desktop profile. No threat signatures observed."
-        if level == "LOW" else
-        f"**{level} RISK ({risk}/100)** — Elevated traffic thresholds or anomalous transmission patterns observed. Agent recommends inspection."
-    )
-    st.markdown(f"""
-    <div class="alert-card {alert_class}">
-        <span style="font-size: 1.8rem;">{alert_icon}</span>
-        <div>{alert_text}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.subheader("🤖 Explainable Security Agent Reasoning")
+    st.write("**Why did the agent reach this conclusion?**")
+    for r in reasons:
+        st.markdown(f"- 🔹 {r}")
+
+    # Recommended Action
+    st.subheader("🛡️ Recommended Incident Action")
+    if level == "LOW":
+        st.info("✅ Traffic is benign and safe. No mitigation required; continue monitoring.")
+    elif level == "MEDIUM":
+        st.warning("⚠️ Investigate unusual endpoints or background applications causing elevated activity.")
+    elif level == "HIGH":
+        st.warning("⚠️ High alert: Inspect destination IPs, verify firewall rules, and throttle suspicious connections.")
+    else:
+        st.error("🚨 Critical incident response: Block offending ports/IPs and initiate network rate limiting immediately.")
 
     # ----------------------------------------------------
-    # ROW 3: EXPLAINABILITY & RECOMMENDED ACTION
-    # ----------------------------------------------------
-    col_reas, col_act = st.columns([3, 2])
-    with col_reas:
-        st.markdown("#### 🤖 Explainable Agent Diagnostics")
-        st.caption("Heuristic reasoning behind the risk calculation:")
-        for r in reasons:
-            st.markdown(f"""
-            <div class="reason-box">
-                <span style="color: #38bdf8;">✦</span>
-                <span>{r}</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-    with col_act:
-        st.markdown("#### 🛡️ Incident Response Recommendation")
-        if level == "LOW":
-            st.success("✅ **Status Benign**: Network traffic is healthy. Continue continuous baseline monitoring.")
-        elif level == "MEDIUM":
-            st.warning("⚠️ **Review Flow**: High connection counts or active background transfers detected. Check open browser tabs or background updaters.")
-        elif level == "HIGH":
-            st.warning("⚠️ **Security Alert**: Potential port scan or excessive asymmetry. Inspect destination IPs and inspect network firewall rules.")
-        else:
-            st.error("🚨 **Critical Threat**: Volumetric attack or exfiltration signature detected. Apply automated IP throttling or rate-limiting.")
-
-    # ----------------------------------------------------
-    # ROW 4: INTERACTIVE VISUALIZATIONS
+    # TRAFFIC METRICS
     # ----------------------------------------------------
     st.divider()
-    st.markdown("#### 📈 Network Flow & Protocol Analytics")
-    v1, v2 = st.columns(2)
+    st.subheader("📡 Flow & Protocol Telemetry")
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        st.metric("Total Packets", f'{live_features["total_packets"]:,}')
+    with m2:
+        st.metric("Total Bytes", f'{live_features["total_bytes"]:,}')
+    with m3:
+        st.metric("Packet Rate", f'{live_features["packets_per_second"]:.2f} pps')
+    with m4:
+        st.metric("Throughput", f'{live_features["bytes_per_second"]:.2f} B/s')
 
-    with v1:
-        # Directional Packet Distribution
-        dir_data = pd.DataFrame({
-            "Direction": ["Inbound (Backward)", "Outbound (Forward)"],
-            "Packets": [feat.get("backward_packets", 0), feat.get("forward_packets", 0)],
-            "Color": ["#38bdf8", "#818cf8"]
-        })
-        chart_dir = alt.Chart(dir_data).mark_bar(cornerRadius=6).encode(
-            x=alt.X("Direction:N", title="Traffic Direction", axis=alt.Axis(labelAngle=0)),
-            y=alt.Y("Packets:Q", title="Packet Count"),
-            color=alt.Color("Direction:N", scale=alt.Scale(domain=["Inbound (Backward)", "Outbound (Forward)"], range=["#38bdf8", "#818cf8"]), legend=None),
-            tooltip=["Direction", "Packets"]
-        ).properties(title="Packet Direction Symmetry (Inbound vs Outbound)", height=220)
-        st.altair_chart(chart_dir, use_container_width=True)
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.metric("TCP Packets", f'{live_features.get("tcp_packets", 0):,}')
+    with c2:
+        st.metric("UDP Packets", f'{live_features.get("udp_packets", 0):,}')
+    with c3:
+        st.metric("Forward (Outbound)", f'{live_features.get("forward_packets", 0):,}')
+    with c4:
+        st.metric("Backward (Inbound)", f'{live_features.get("backward_packets", 0):,}')
 
-    with v2:
-        # Protocol Distribution
-        proto_data = pd.DataFrame({
-            "Protocol": ["TCP Packets", "UDP Packets"],
-            "Count": [feat.get("tcp_packets", 0), feat.get("udp_packets", 0)]
-        })
-        chart_proto = alt.Chart(proto_data).mark_bar(cornerRadius=6).encode(
-            x=alt.X("Protocol:N", title="Transport Layer Protocol", axis=alt.Axis(labelAngle=0)),
-            y=alt.Y("Count:Q", title="Packet Count"),
-            color=alt.Color("Protocol:N", scale=alt.Scale(domain=["TCP Packets", "UDP Packets"], range=["#34d399", "#f59e0b"]), legend=None),
-            tooltip=["Protocol", "Count"]
-        ).properties(title="Transport Protocol Breakdown (TCP vs UDP)", height=220)
-        st.altair_chart(chart_proto, use_container_width=True)
+    d1, d2 = st.columns(2)
+    with d1:
+        st.metric("Unique Sources", f'{live_features.get("unique_sources", 1):,}')
+    with d2:
+        st.metric("Unique Destinations", f'{live_features.get("unique_destinations", 1):,}')
 
     # ----------------------------------------------------
-    # ROW 5: TELEMETRY GRID
+    # RAW METRICS & SUMMARY TABLE
     # ----------------------------------------------------
-    t1, t2, t3, t4 = st.columns(4)
-    with t1:
-        st.metric("Total Transferred", f"{feat['total_bytes']:,} Bytes")
-    with t2:
-        st.metric("Packet Rate", f"{feat['packets_per_second']:.1f} pps")
-    with t3:
-        st.metric("Bandwidth Throughput", f"{feat['bytes_per_second'] / 1024:.2f} KB/s")
-    with t4:
-        st.metric("Remote Target Hosts", f"{feat.get('unique_destinations', 1):,}")
-
-    # ----------------------------------------------------
-    # ROW 6: INSPECTION TABLES
-    # ----------------------------------------------------
-    with st.expander("🔍 Detailed Flow Telemetry Table"):
+    st.divider()
+    with st.expander("🔍 View All Live Flow Features (Raw Table)"):
         feature_table = pd.DataFrame(
-            list(feat.items()),
-            columns=["Flow Feature", "Observed Value"]
+            list(live_features.items()),
+            columns=["Feature", "Value"]
         )
-        feature_table["Observed Value"] = feature_table["Observed Value"].astype(str)
+        feature_table["Value"] = feature_table["Value"].astype(str)
         st.dataframe(feature_table, use_container_width=True, hide_index=True)
+
+    with st.expander("📋 Inspection Summary Table"):
+        summary_data = {
+            "Metric": [
+                "Capture Duration",
+                "Total Packets",
+                "Total Bytes",
+                "Packets / Second",
+                "Bytes / Second",
+                "TCP Packets",
+                "UDP Packets",
+                "Forward (Outbound) Packets",
+                "Backward (Inbound) Packets",
+                "Unique Destinations",
+                "AI Prediction",
+                "Anomaly Decision Score",
+                "Risk Score",
+                "Risk Level"
+            ],
+            "Value": [
+                f'{live_features["duration"]} seconds',
+                str(live_features["total_packets"]),
+                str(live_features["total_bytes"]),
+                f'{live_features["packets_per_second"]:.2f}',
+                f'{live_features["bytes_per_second"]:.2f}',
+                str(live_features.get("tcp_packets", 0)),
+                str(live_features.get("udp_packets", 0)),
+                str(live_features.get("forward_packets", 0)),
+                str(live_features.get("backward_packets", 0)),
+                str(live_features.get("unique_destinations", 1)),
+                str(prediction),
+                f"{anomaly_score:.4f}",
+                f"{risk}/100",
+                str(level)
+            ]
+        }
+        summary_df = pd.DataFrame(summary_data)
+        summary_df["Value"] = summary_df["Value"].astype(str)
+        st.dataframe(summary_df, use_container_width=True, hide_index=True)
 
 
 # ============================================================
-# KNOWLEDGE HUB & THREAT DIFFERENTIATION
+# EDUCATIONAL KNOWLEDGE HUB
 # ============================================================
 
 st.divider()
 
-with st.expander("💡 Threat Intelligence Hub: How SentinelAI Differentiates Normal vs. Malicious Traffic"):
+with st.expander("💡 Knowledge Hub: How does SentinelAI differentiate Normal vs. Malicious Traffic?"):
     st.markdown("""
     ### 🟢 What defines **NORMAL** Network Traffic?
-    In day-to-day computer usage (web browsing, cloud productivity, video streaming):
-    1. **Bidirectional Request-Response Symmetry**:
-       - When a computer visits a website or streams media, it transmits small client requests (**Forward Packets**) and receives larger, multi-packet payloads (**Backward Packets**).
-       - Typical benign ratio: **20% to 40% forward**, **60% to 80% backward**.
-    2. **Reasonable Transmission Rates**:
-       - Everyday browsing typically produces **10 to 100 packets/sec**.
-       - HD video streaming produces **100 to 300 packets/sec** with high inbound byte volume.
-    3. **Controlled Remote Endpoints**:
-       - Normal browsing connects to a realistic set of CDN nodes and cloud servers (**5 to 50 unique destinations**).
-    - **Classification**: **`NORMAL`**, Decision Score > 0, Risk Score: **`0 - 25/100 (LOW)`**.
+    In regular computer operation (browsing, video streaming, office apps, gaming):
+    - **Balanced Request-Response Symmetry**: When your computer requests a webpage or video, it sends a small request (forward packet) and receives multiple larger data packets (backward packets). Typical ratio: 20–40% forward, 60–80% backward.
+    - **Realistic Packet Rates**: Standard web browsing produces 10–100 packets/second. High-def video streaming produces 100–300 packets/second.
+    - **Controlled Destination Scope**: A PC typically communicates with a dozen or two remote CDN/cloud servers at a time.
+    - **AI Result**: **`NORMAL`**, Decision Score > 0, Risk: **`LOW (0-25/100)`**.
 
     ---
 
     ### 🔴 What defines **MALICIOUS / SUSPICIOUS** Traffic?
-    Cyberattack vectors fundamentally break normal protocol dynamics:
-    - **SYN Flood / Volumetric DoS (`CRITICAL RISK`)**:
-      - Attacker transmits thousands of packets per second (**> 1,500 pps**).
-      - **100% Outbound, 0% Inbound Responses**: The attacker floods TCP SYN requests without completing the handshake.
-    - **Port Scanning & Host Reconnaissance (`HIGH RISK`)**:
-      - Automated scanners (e.g. Nmap) rapidly probe hundreds or thousands of distinct IP addresses or ports in seconds.
-      - **High Destination Fan-Out (> 150 - 300 targets)** with minimal payload transfer.
-    - **Data Exfiltration / C2 Exfil (`HIGH RISK`)**:
-      - Severe byte asymmetry where outbound uploads dramatically outweigh inbound traffic.
+    Attacks fundamentally violate normal network protocols and behavioral dynamics:
+    1. **DoS / SYN Flood Attacks (`CRITICAL RISK`)**:
+       - Massive packet rates (thousands of packets/sec).
+       - **100% Outbound, 0% Responses**: Attacker floods SYN packets without completing the TCP handshake.
+    2. **Port Scanning / Host Reconnaissance (`HIGH RISK`)**:
+       - Attacker probes hundreds of different IP addresses or ports in seconds.
+       - Huge destination fan-out (> 150–300 unique hosts) with little or no payload data.
+    3. **Data Exfiltration / Botnet C2 (`HIGH RISK`)**:
+       - Unusually massive outbound byte transfer compared to inbound traffic.
+       - Abnormal payload sizes and sustained outbound uploads to unknown endpoints.
     """)
