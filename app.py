@@ -26,7 +26,7 @@ st.title("🛡️ Intrusion Detection Engine")
 st.caption("AI-Powered Live Network Monitoring, Anomaly Detection & Risk Analysis Agent")
 
 st.write(
-    "SentinelAI analyzes network traffic dynamics in real time using an **Isolation Forest AI Anomaly Detector** "
+    "The model analyzes network traffic dynamics in real time using an **Isolation Forest AI Anomaly Detector** "
     "combined with an **Explainable Security Agent** to differentiate benign everyday activity from malicious intrusions."
 )
 
