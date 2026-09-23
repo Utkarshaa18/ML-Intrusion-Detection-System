@@ -382,7 +382,7 @@ if "last_features" in st.session_state:
 
 st.divider()
 
-with st.expander("💡 Knowledge Hub: How does SentinelAI differentiate Normal vs. Malicious Traffic?"):
+with st.expander("💡 Knowledge Hub: How does this model differentiate Normal vs. Malicious Traffic?"):
     st.markdown("""
     ### 🟢 What defines **NORMAL** Network Traffic?
     In regular computer operation (browsing, video streaming, office apps, gaming):
